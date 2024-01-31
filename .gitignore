@@ -1,1 +1,5 @@
 .idea
+parser/__pycache__/
+parser/spiders/__pycache__/
+
+imdb_data.csv
