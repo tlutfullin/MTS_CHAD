@@ -1,6 +1,5 @@
 import scrapy
 from urllib.parse import urlparse
-from scrapy_splash import SplashRequest
 import csv
 
 class ImdbSpider(scrapy.Spider):
@@ -8,6 +7,7 @@ class ImdbSpider(scrapy.Spider):
     name = 'imdb'
     # URL-адрес главной страницы с жанрами
     start_urls = ['https://www.imdb.com/feature/genre/?ref_=nv_ch_gr']
+
 
     def parse(self, response):
         # Извлечение ссылок на страницы с жанрами
@@ -20,23 +20,23 @@ class ImdbSpider(scrapy.Spider):
             yield scrapy.Request(url=link, callback=self.parse_movie_details)
 
     def parse_movie_details(self, response):
-        title = response.css('h1.ipc-page-title__title::text').get()
-        year = response.css('.ipc-inline-list__item:nth-child(1)::text').get()
-        # Извлекаем рейтинг
-        rating = response.xpath('//span[contains(@class, "ipc-rating-star--imdb-rating")]/text()').get()
+        movies = response.css('li.ipc-metadata-list-summary-item')
 
-        director = response.css('.sc-a78ec4e3-2.gmHPTF a::text').get()
-
-        # Жанры фильма
-        genres = response.css('[data-testid="btp_gl"] li::text').getall()
-
-        # Запись данных в CSV-файл
         with open('imdb_data.csv', 'a', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ['Title', 'Year', 'Rating', 'Director', 'Genres']
+            fieldnames = ['title', 'year', 'imdb_rating', 'genre']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
 
-            # Проверка наличия заголовоков в файле
-            if csvfile.tell() == 0:
-                writer.writeheader()
+            for movie in movies:
+                title = movie.css('.ipc-title__text::text').get()
+                year = movie.css('.dli-title-metadata-item:nth-child(1)::text').get()
+                imdb_rating = movie.css('.ipc-rating-star.ipc-rating-star--base.ipc-rating-star--imdb.ratingGroup--imdb-rating::text').get()
+                genre = movie.css('.dli-title-type-data::text').get()
 
-            writer.writerow({'Title': title, 'Year': year, 'Rating': rating, 'Director': director, 'Genres': genres})
+                writer.writerow({
+                    'title': title,
+                    'year': year,
+                    'imdb_rating': imdb_rating,
+                    'genre': genre
+                })
+
