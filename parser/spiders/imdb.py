@@ -130,6 +130,7 @@ import csv
 
 import scrapy
 from urllib.parse import urlparse
+from scrapy_splash import SplashRequest
 import csv
 
 class ImdbSpider(scrapy.Spider):
